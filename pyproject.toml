@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-diss-anybody"
-version = "1.0.1"
+version = "1.0.2"
 description = "一个在指定的用户发言时，有几率回复指定的内容的nonebot插件"
 authors = ["SherkeyXD <253294679@qq.com>"]
 license = "MIT"
