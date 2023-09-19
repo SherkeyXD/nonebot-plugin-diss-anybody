@@ -1,4 +1,5 @@
 from nonebot import get_driver
+from nonebot import logger
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 
 from .config import DissConfig
@@ -32,15 +33,20 @@ class diss_info:
     def get_reply(self):
         if self.result:
             if self.check():
+                reply = self.result[0]["reply"]
+                timestamp = datetime.timestamp(datetime.now())
                 db.update(
-                    {"last_diss": datetime.timestamp(datetime.now())},
+                    { "last_diss": timestamp },
                     User.user_id == self.user_id,
                 )
-                return self.result[0]["reply"]
+                logger.opt(colors=True).info(
+                    f"Bot ready to diss <e>{self.user_id}</e> with <g>{reply}</g> in group <e>{self.group_id}</e> in timestamp <g>{timestamp}</g>"
+                )  
+                return reply
         return None
 
     def check(self):
-        return self.check_blacklist and self.check_chance and self.check_cd
+        return self.check_blacklist() and self.check_chance() and self.check_cd()
 
     def check_blacklist(self):
         try:
@@ -68,6 +74,6 @@ class diss_info:
         else:
             timestamp = datetime.timestamp(datetime.now())
             try:
-                return timestamp - self.result[0]["last_diss"] > cd
+                return ((timestamp - self.result[0]["last_diss"]) > cd)
             except KeyError:
                 return True
