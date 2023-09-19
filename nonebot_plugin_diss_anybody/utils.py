@@ -68,8 +68,6 @@ class diss_info:
         else:
             timestamp = datetime.timestamp(datetime.now())
             try:
-                return (timestamp - self.result[0]["last_diss"] > cd)
+                return timestamp - self.result[0]["last_diss"] > cd
             except KeyError:
                 return True
-
-    
