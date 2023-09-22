@@ -2,7 +2,7 @@ from nonebot import get_driver
 from nonebot import on_message
 from nonebot.adapters import Event
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
-from nonebot.adapters.onebot.v11 import permission, Message, MessageSegment
+from nonebot.adapters.onebot.v11 import permission
 from nonebot.plugin import PluginMetadata
 
 from .config import DissConfig
@@ -32,7 +32,5 @@ async def diss_somebody(event: GroupMessageEvent):
 
     reply = msg.get_reply()
     if reply:
-        await diss.finish(
-            MessageSegment.reply(id_=event.message_id) + Message(reply)
-        )
+        await diss.finish(reply)
     return None

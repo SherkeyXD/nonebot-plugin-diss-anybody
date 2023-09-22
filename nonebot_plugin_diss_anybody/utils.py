@@ -1,6 +1,7 @@
 from nonebot import get_driver
 from nonebot import logger
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
+from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 from .config import DissConfig
 
@@ -28,22 +29,50 @@ class diss_info:
     def __init__(self, event: GroupMessageEvent):
         self.user_id = event.user_id
         self.group_id = event.group_id
+        self.message_id = event.message_id
         self.result = db.search(User.user_id == self.user_id)
 
     def get_reply(self):
-        if self.result:
-            if self.check():
-                reply = self.result[0]["reply"]
+        if self.result and self.check():
+            reply = self.resolve_reply(self.result[0]["reply"])
+            if reply:
                 timestamp = datetime.timestamp(datetime.now())
                 db.update(
-                    { "last_diss": timestamp },
+                    {"last_diss": timestamp},
                     User.user_id == self.user_id,
                 )
                 logger.opt(colors=True).info(
-                    f"Bot ready to diss <e>{self.user_id}</e> with <g>{reply}</g> in group <e>{self.group_id}</e> in timestamp <g>{timestamp}</g>"
-                )  
-                return reply
+                    f"Bot ready to send message, marking timestamp <e>{timestamp}</e>"
+                )
+            return reply
         return None
+
+    def resolve_reply(self, reply: str | list[str]) -> MessageSegment | None:
+        if type(self.result[0]["reply"]) == list:
+            reply = random.choice(reply)
+
+        if reply.startswith("image://"):
+            file = res_path / "images" /reply[8:]
+            try:
+                logger.opt(colors=True).info(
+                    f"Bot trying to diss <e>{self.user_id}</e> in group <e>{self.group_id}</e> with image <g>{file}</g>"
+                )
+                return MessageSegment.reply(id_=self.message_id) + MessageSegment.image(file)
+            except FileNotFoundError:
+                logger.opt(colors=True).warning(
+                    f"Bot fail to diss with image: <r>{file}</r> not found"
+                )
+                return None
+        elif reply.startswith("text://"):
+            logger.opt(colors=True).info(
+                f"Bot trying to diss <e>{self.user_id}</e> with <g>{reply}</g> in group <e>{self.group_id}</e>"
+            )
+            return MessageSegment.reply(id_=self.message_id) + MessageSegment.text(reply[6:])
+        else:
+            logger.opt(colors=True).info(
+                f"Bot trying to diss <e>{self.user_id}</e> with raw meaasge <g>{reply}</g> in group <e>{self.group_id}</e>"
+            )
+            return MessageSegment.reply(id_=self.message_id) + Message(reply)
 
     def check(self):
         return self.check_blacklist() and self.check_chance() and self.check_cd()
@@ -74,6 +103,6 @@ class diss_info:
         else:
             timestamp = datetime.timestamp(datetime.now())
             try:
-                return ((timestamp - self.result[0]["last_diss"]) > cd)
+                return (timestamp - self.result[0]["last_diss"]) > cd
             except KeyError:
                 return True
