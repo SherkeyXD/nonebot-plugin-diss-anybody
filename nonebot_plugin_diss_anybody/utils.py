@@ -67,7 +67,7 @@ class diss_info:
             logger.opt(colors=True).info(
                 f"Bot trying to diss <e>{self.user_id}</e> with <g>{reply}</g> in group <e>{self.group_id}</e>"
             )
-            return MessageSegment.reply(id_=self.message_id) + MessageSegment.text(reply[6:])
+            return MessageSegment.reply(id_=self.message_id) + MessageSegment.text(reply[7:])
         else:
             logger.opt(colors=True).info(
                 f"Bot trying to diss <e>{self.user_id}</e> with raw meaasge <g>{reply}</g> in group <e>{self.group_id}</e>"
